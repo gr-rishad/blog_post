@@ -26,6 +26,6 @@ public class CommentDto {
     // comment body should not be null or empty
     // comment body must be maintain 10 characters
     @NotEmpty(message = "Comment body must not be Null")
-    @Size(min = 10,message = "Comment body must be minimum 10 characters")
+    @Size(min = 10, message = "Comment body must be minimum 10 characters")
     private String body;
 }
