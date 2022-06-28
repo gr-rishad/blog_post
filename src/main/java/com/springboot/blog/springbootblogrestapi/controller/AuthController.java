@@ -2,10 +2,12 @@ package com.springboot.blog.springbootblogrestapi.controller;
 
 import com.springboot.blog.springbootblogrestapi.entity.Role;
 import com.springboot.blog.springbootblogrestapi.entity.User;
+import com.springboot.blog.springbootblogrestapi.payload.JWTAuthResponse;
 import com.springboot.blog.springbootblogrestapi.payload.LoginDto;
 import com.springboot.blog.springbootblogrestapi.payload.SignUpDto;
 import com.springboot.blog.springbootblogrestapi.repository.RoleRepository;
 import com.springboot.blog.springbootblogrestapi.repository.UserRepository;
+import com.springboot.blog.springbootblogrestapi.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpSession;
 import java.util.Collections;
 
 @RestController
@@ -29,21 +32,29 @@ public class AuthController {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider tokenProvider;
 
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, JwtTokenProvider tokenProvider) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tokenProvider = tokenProvider;
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<String> authentication(@RequestBody LoginDto loginDto) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                loginDto.getUsernameOrEmail(), loginDto.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return new ResponseEntity<>("User Sign-in Successfully", HttpStatus.OK);
+    public ResponseEntity<JWTAuthResponse> authenticateUser(@RequestBody LoginDto loginDto) {
+
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    loginDto.getUsernameOrEmail(), loginDto.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // get token from token provider
+            String token = tokenProvider.generateToken(authentication);
+
+            return ResponseEntity.ok(new JWTAuthResponse(token));
+
     }
 
     @PostMapping("/signup")
