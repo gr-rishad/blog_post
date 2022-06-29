@@ -2,14 +2,11 @@ package com.springboot.blog.springbootblogrestapi.security;
 
 import com.springboot.blog.springbootblogrestapi.exception.BlogAPIException;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
 
 @Component
@@ -32,16 +29,16 @@ public class JwtTokenProvider {
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(expireDate)
-
-                .signWith(getSigningKey())
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
         return token;
     }
 
-    private Key getSigningKey() {
-        byte[] keyBytes = this.jwtSecret.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+//    private Key getSigningKey() {
+//        byte[] keyBytes = this.jwtSecret.getBytes(StandardCharsets.UTF_8);
+//        return Keys.hmacShaKeyFor(keyBytes);
+//    }
+
     // get username from the token
     public String getUsernameFromJWT(String token) {
         Claims claims = Jwts.parser()
@@ -50,6 +47,7 @@ public class JwtTokenProvider {
                 .getBody();
         return claims.getSubject();
     }
+
 
     // validate JWT token
     public boolean validateToken(String token) {
